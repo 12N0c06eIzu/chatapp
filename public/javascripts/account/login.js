@@ -16,6 +16,8 @@ socket.on('loadUserList', (data) => {
     });
 });
 */
+socket.emit('getUserList');
+
 
 function pushLogin() {
     console.log("pushLoginきたお");
@@ -46,10 +48,12 @@ function pushLogin() {
 
                 } else {
                     console.log("pass ng");
+                    // continue;
                 }
             }
 
         });
+        // alert("存在しないユーザー名です。");
     });
    
     return false;
