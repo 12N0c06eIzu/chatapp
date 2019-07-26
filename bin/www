@@ -135,6 +135,14 @@ io.on('connection', (socket) => {
         */
     });
 
+    socket.on("addUser", (userData) => {
+        console.log(userData);
+        fs.appendFile('./user.csv', userData + "\r\n", (err) => {
+            if(err) throw err;
+            console.log("ゆーざを追加しました。");
+        });
+    });
+
     // ユーザー名を格納する
     var name;
     // ユーザー名が入っている配列
