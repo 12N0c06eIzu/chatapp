@@ -233,6 +233,11 @@ io.on('connection', (socket) => {
                         value.time + "," +
                         value.msg
                     );
+                    console.log(
+                        value.name + "," +
+                        value.time + "," +
+                        value.msg
+                    );
                     // console.log(logMessage);
                     io.emit('loadLogMessage', logMessage);
 
@@ -254,9 +259,17 @@ io.on('connection', (socket) => {
                 io.emit('load', data);
                 console.log(data);
                 // console.log(data.length);
-                data.forEach(function (value) {
+                data.forEach(function (key) {
                     // code...
+                    console.log(key);
+                    // console.log(key[userame]);
+                    console.log(
+                        key.username + ":" + 
+                        key.password
+                    );
                 });
+                io.emit('loadUserList', data);
+
             })
         );
     });
