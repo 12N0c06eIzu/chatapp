@@ -1,0 +1,33 @@
+doctype html
+html
+  head
+    title = Socket.IO chat
+    link(rel="icon",  href="/images/favicon.ico", type="image/x-icon")
+    link(rel="stylesheet", href="/stylesheets/socketStyle.css")
+
+  body
+    h3(id="nowUserList" ) 今いるメンバーは　：
+    p(id="writer") 入力中のユーザーはいません。
+    form(name="roomList")
+      select(id="nowRoom")
+        option(value="main") main
+        option(value="test1") test1
+        option(value="test2") test2 
+        option(value="test3") test3 
+      button(onclick="createRoom();")="追加"
+
+    ul(id="messages")
+    form(class="chat" )
+      input(type="text" id="m" autocomplete="off" onfocus="nowWrite();" )
+      button(class="sendButton" name="Send")="Send"
+
+    script(src="/socket.io/socket.io.js")
+    script(src="/javascripts/chat.js")
+    script(src="/javascripts/csv.js")
+    script(src="/javascripts/basic.js")
+
+    //- writer 入力中の人を表示する
+    //-nowUserList room内にいるメンバーを表示する
+    //-
+    //-
+    //-

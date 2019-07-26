@@ -1,0 +1,283 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('chatapp:server');
+var http = require('http');
+
+
+var fs = require("fs");
+var csv = require("csv");
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+var server = http.createServer(app);
+
+/**
+ * Socket.io を要求？？
+ */
+var io = require('socket.io')(server);
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+    var port = parseInt(val, 10);
+
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
+
+    if (port >= 0) {
+        // port number
+        return port;
+    }
+
+    return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
+
+    var bind = typeof port === 'string' ?
+        'Pipe ' + port :
+        'Port ' + port;
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === 'string' ?
+        'pipe ' + addr :
+        'port ' + addr.port;
+    debug('Listening on ' + bind);
+}
+
+
+//↑テンプレなのでいじらない
+
+// この中身をいじって機能を追加するのじゃ
+// usernameを格納する配列を先に外部で宣言しておく
+var userList = [];
+
+//配列の末尾の添え字を格納する
+var userNumber = 0;
+
+//room名を入れる
+var room = "";
+
+// 入ったときに
+io.on('connection', (socket) => {
+    var userID = socket.id;
+    // コンソールに表示する
+    console.log('Welcome Server');
+
+    socket.on('loadLogMessage', (logFileCsv) => {
+        logGet(logFileCsv);
+    });
+
+    socket.on('roomSendMessage', function (room, msg) {
+        socket.broadcast.to(room).emit('roomSendMessage', msg);
+    });
+
+
+
+    // CSVファイルへの書き込み
+    socket.on("sendCsv", (msg) => {
+        /* 
+        fs.appendFile('./store.csv', msg + "\r\n", (err) => {
+           if (err) throw err;
+           console.log('ファイルへの書き込みが完了しました。');
+         });
+        */
+    });
+
+    // ユーザー名を格納する
+    var name;
+    // ユーザー名が入っている配列
+    var userListAll;
+
+
+    /*
+    こいつどこに使われてて送信されてんのかさっぱりわからんけど
+    この名前のくせにおそらく指定したroomに文字列を送ってると思うんやけど
+    一回琵琶湖沈んどくか？
+    
+    */
+    // socket.on('message', (message) => {
+    socket.on('server_join', (sendMessage) => {
+        console.log(userID);
+
+        //        socket.broadcast.emit('message', message);
+        console.log(room + "に送信します");
+        socket.broadcast.to(room).emit('server_mes', (sendMessage));
+    });
+
+    socket.on('disconnect', () => {
+        console.log("Good Bye");
+
+        // 現状いま開いているページのクライアントが退出したような文面が出力される
+        var exitMessage = name + "さんが退出しました。";
+
+        // nameを配列から削除して再度文字列に加工して飛ばす
+        var delName = name;
+        var delIndex = userList.indexOf(delName);
+        if (delIndex >= 0) {
+            userList.splice(delIndex, 1);
+        }
+
+        // userList.push(username);
+        userListAll = userList.join(",");
+
+        io.emit('nowUserList', userListAll);
+
+        io.emit('exit', exitMessage);
+    });
+
+
+    // code
+    /* こんな感じで、カスタムイベントと受け取るデータを.on()の中に入れる
+    今回の場合は入場してきた人の名前を送るのでenterMemberと必要な情報usernameを
+    送信してみる
+    */
+    socket.on('writer', (username) => {
+        /*文字列、データの形でイベントを送る。*/
+        io.emit('writer', username);
+        // console.log("メッセージを送信する");
+        // io.to(room).emit('writer', username);
+    });
+
+    socket.on('nowUserList', (username) => {
+        // userListに名前を入れる
+        userList.push(username);
+        userListAll = userList.join(",");
+
+        io.emit('nowUserList', userListAll);
+
+        // これいる？？
+        name = username;
+
+    });
+
+    socket.on('enterUser', (username) => {
+        io.emit('enterUser', username);
+    });
+
+    //roomに入るイベント
+    socket.on('roomJoin', (roomName) => {
+        // ここに入れておかないと送信の確認が取れない
+        room = roomName;
+        console.log(room + "に入室します");
+        socket.join(room);
+    });
+
+    /*
+ログファイルからメッセージおくるから
+そのうち"ルーム名.csv"で送ることになるのでとりあえず対応しておく
+*/
+    function logGet(logFileCsv) {
+        // fs.createReadStream("./store.csv").pipe(
+        fs.createReadStream("./" + logFileCsv).pipe(
+            csv.parse({
+                columns: true
+            }, (err, data) => {
+                io.emit('load', data);
+                console.log(data);
+                // console.log(data.length);
+                data.forEach(function (value) {
+                    var logMessage = (
+                        value.name + "," +
+                        value.time + "," +
+                        value.msg
+                    );
+                    // console.log(logMessage);
+                    io.emit('loadLogMessage', logMessage);
+
+                    //                    io.to(userID).emit('loadLogMessage', logMessage);
+
+                });
+            })
+        );
+    };
+
+
+    // userList Check
+    socket.on('getUserList', (user) => {
+        console.log("ユーザーリストの取得を行います。");
+        fs.createReadStream("./user.csv").pipe(
+            csv.parse({
+                columns: true
+            }, (err, data) => {
+                io.emit('load', data);
+                console.log(data);
+                // console.log(data.length);
+                data.forEach(function (value) {
+                    // code...
+                });
+            })
+        );
+    });
+
+    // createRoom
+    socket.on('newRoom', () => {
+        console.log("newRoomきたよ");
+    });
+
+
+}); //END
+
+
+/*
+fs.open("./store.csv", "a", (err, data) => {
+if(err) throw err;
+fs.appendFile(data, "\n" + socket.nickname + "." + messages, "utf-8", err=> {
+fs.close(data, err => {
+if(err) throw err;
+});
+if(err) throw err;
+});
+});
+*/

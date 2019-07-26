@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+  a(href='/html/index.html') socket.io chat html
+  br
+  a(href="/users") users
+
+  //- この状態でソケット.ioが動くようになってから
+  //- pugに変換しようと思うので今週そこ考えてこうな俺氏

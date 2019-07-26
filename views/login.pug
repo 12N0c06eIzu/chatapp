@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  h1= loginTitle
+
+  form(action="#" name="login" method="GET" onsubmit="return pushLogin();")
+    input(name="userName")
+    br
+    input(name="password")
+    button(type="submit")="ログイン"
+    
+
+    //-    button(onclick="pushLogin();" type="button")="ログイン"
+  
+  a(href="/users") 取り合えずチャットに飛べるURL
+  br
+  a(href="/register") ユーザーの新規登録
+
+    script(src="/socket.io/socket.io.js")
+    script(src="/javascripts/account/login.js")
+  

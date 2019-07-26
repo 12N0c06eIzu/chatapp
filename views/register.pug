@@ -1,0 +1,20 @@
+extends layout
+
+block content
+  h1= registerTitle
+
+  form(action="#" name="register" method="GET" onsubmit="return pushRegister();")
+    input(name="userName")
+    br
+    input(name="password")
+    button(type="submit")="作成してログイン"
+
+        //    button(onclick="pushRegister();" type="button")="新規作成"
+  
+  a(href="/users") 取り合えずチャットに飛べるURL
+  br
+  a(href="/") 既にアカウントをお持ちの方はこちら
+
+    script(src="/socket.io/socket.io.js")
+    script(src="/javascripts/account/register.js")
+  //-
