@@ -137,8 +137,10 @@ io.on('connection', (socket) => {
 
     socket.on("addUser", (userData) => {
         console.log(userData);
-        fs.appendFile('./user.csv', userData + "\r\n", (err) => {
-            if(err) throw err;
+        // fs.appendFile('./user.csv', userData + "\r\n", (err) => {
+            fs.appendFile('./testUser.csv', userData + "\r\n", (err) => {
+
+            if (err) throw err;
             console.log("ゆーざを追加しました。");
         });
     });
@@ -260,7 +262,8 @@ io.on('connection', (socket) => {
     // userList Check
     socket.on('getUserList', (user) => {
         console.log("ユーザーリストの取得を行います。");
-        fs.createReadStream("./user.csv").pipe(
+        // fs.createReadStream("./user.csv").pipe(
+        fs.createReadStream("./testUser.csv").pipe(
             csv.parse({
                 columns: true
             }, (err, data) => {
@@ -269,12 +272,14 @@ io.on('connection', (socket) => {
                 // console.log(data.length);
                 data.forEach(function (key) {
                     // code...
+                    /*
                     console.log(key);
                     // console.log(key[userame]);
                     console.log(
                         key.username + ":" + 
                         key.password
                     );
+                    */
                 });
                 io.emit('loadUserList', data);
 
